@@ -6,6 +6,8 @@ import pandas as pd
 import plotly.express as px  # Recommended for professional charts
 st.cache_data(ttl=60)
 
+st.sidebar.write("API:", API)
+
 #API = "http://127.0.0.1:8000"
 
 API = "http://localhost:8000"
