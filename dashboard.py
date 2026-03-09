@@ -20,13 +20,21 @@ page = st.sidebar.radio(
 # Helper to fetch data
 def fetch_data():
     try:
-        response = requests.get(f"{API}/invoices/")
+        response = requests.get(f"{API}/invoices/", timeout=10)
         if response.status_code == 200:
             return pd.DataFrame(response.json())
-    except:
+        else:
+            st.error("Backend returned an error")
+            return pd.DataFrame()
+    except requests.exceptions.Timeout:
+        st.error("Backend request timed out. Please try again.")
         return pd.DataFrame()
-    return pd.DataFrame()
-
+    except requests.exceptions.ConnectionError:
+        st.error("Cannot connect to backend API.")
+        return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
+        return pd.DataFrame()
 # ---------------- Upload ----------------
 
 if page == "Upload Invoice":
@@ -39,6 +47,7 @@ if page == "Upload Invoice":
             response = requests.post(
                 f"{API}/upload/",
                 files={"file": (file.name, file.getvalue(), "application/pdf")},
+                timeout=30
             )
 
             if response.status_code != 200:
@@ -141,7 +150,8 @@ elif page == "AI Q&A":
 
                 response = requests.post(
                     f"{API}/ask/",
-                    json={"question": question}
+                    json={"question": question},
+                    timeout=20
                 )
 
                 if response.status_code != 200:
