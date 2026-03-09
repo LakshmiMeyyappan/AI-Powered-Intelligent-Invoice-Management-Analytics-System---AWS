@@ -4,6 +4,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import plotly.express as px  # Recommended for professional charts
+st.cache_data(ttl=60)
 
 #API = "http://127.0.0.1:8000"
 
@@ -18,6 +19,7 @@ page = st.sidebar.radio(
 )
 
 # Helper to fetch data
+@st.cache_data(ttl=60)
 def fetch_data():
     try:
         response = requests.get(f"{API}/invoices/", timeout=10)
