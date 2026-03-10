@@ -11,8 +11,6 @@ import plotly.express as px  # Recommended for professional charts
 
 API = "http://localhost:8000"
 
-st.sidebar.write("API:", API)
-
 st.set_page_config(layout="wide", page_title="Invoice Intel", page_icon="🧾")
 
 st.title("AI Invoice Automation")
@@ -53,7 +51,7 @@ if page == "Upload Invoice":
             response = requests.post(
                 f"{API}/upload/",
                 files={"file": (file.name, file.getvalue(), "application/pdf")},
-                timeout=30
+                timeout=120
             )
 
             if response.status_code != 200:
