@@ -15,4 +15,12 @@ COPY . .
 
 EXPOSE 10000
 
-CMD ["streamlit", "run", "dashboard.py", "--server.port=10000", "--server.address=0.0.0.0", "--server.headless=true"]
+RUN echo '#!/bin/bash\n\
+echo "Starting FastAPI..."\n\
+uvicorn main:app --host 0.0.0.0 --port 8000 &\n\
+sleep 5\n\
+echo "Starting Streamlit..."\n\
+streamlit run dashboard.py --server.port 10000 --server.address 0.0.0.0 --server.headless true\n\
+' > start.sh && chmod +x start.sh
+
+CMD ["./start.sh"]
