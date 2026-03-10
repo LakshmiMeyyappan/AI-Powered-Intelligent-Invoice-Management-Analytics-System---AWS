@@ -4,15 +4,10 @@ import streamlit as st
 import requests
 import pandas as pd
 import plotly.express as px  # Recommended for professional charts
-st.cache_data(ttl=60)
-
-st.sidebar.write("API:", API)
 
 API = "http://127.0.0.1:8000"
-
-#API = "http://localhost:8000"
-
 st.set_page_config(layout="wide", page_title="Invoice Intel", page_icon="🧾")
+st.sidebar.write("API:", API)
 st.title("AI Invoice Automation")
 
 page = st.sidebar.radio(
