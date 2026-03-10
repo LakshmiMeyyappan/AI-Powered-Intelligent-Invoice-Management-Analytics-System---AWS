@@ -5,7 +5,9 @@ import requests
 import pandas as pd
 import plotly.express as px  # Recommended for professional charts
 
-API = "http://127.0.0.1:8000"
+#API = "http://127.0.0.1:8000"
+
+API = "https://niwy6jjpcr.us-east-1.awsapprunner.com"
 st.set_page_config(layout="wide", page_title="Invoice Intel", page_icon="🧾")
 st.sidebar.write("API:", API)
 st.title("AI Invoice Automation")
