@@ -13,7 +13,7 @@ API = "http://localhost:8000"
 
 st.set_page_config(layout="wide", page_title="Invoice Intel", page_icon="🧾")
 
-st.title("AI Invoice Automation")
+st.title("InvoiceIQ AI — Smart Invoice Processing & Insights")
 
 page = st.sidebar.radio(
     "Navigation",
