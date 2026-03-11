@@ -1,4 +1,4 @@
-﻿# dashboard.py
+# dashboard.py
 
 import streamlit as st
 import requests
@@ -17,11 +17,11 @@ st.title("InvoiceIQ AI — Smart Invoice Processing & Insights")
 
 page = st.sidebar.radio(
     "Navigation",
-    ["Dashboard", "Upload Invoice", "Analytics", "AI Q&A"]
+    ["Dashboard", "Upload Invoice", "Analytics", "AI Insights"]
 )
 
 # Helper to fetch data
-@st.cache_data(ttl=60)
+#@st.cache_data(ttl=60)
 def fetch_data():
     try:
         response = requests.get(f"{API}/invoices/", timeout=10)
@@ -68,7 +68,7 @@ if page == "Upload Invoice":
 # ---------------- Dashboard ----------------
 
 if page == "Dashboard":
-    st.header("📊 Financial Overview")
+    st.header(" Financial Overview")
     df = fetch_data()
 
     if df.empty:
@@ -93,7 +93,7 @@ if page == "Dashboard":
 
 # ---------------- Analytics ----------------
 elif page == "Analytics":
-    st.header("📈 Business Intelligence")
+    st.header(" Business Intelligence")
     df = fetch_data()
 
     if not df.empty:
@@ -104,7 +104,7 @@ elif page == "Analytics":
         df = df.dropna(subset=["Date"])
         
         # 3. Spend Trend (Area Chart)
-        st.subheader("Cash Flow Timeline")
+        st.subheader("Vendor Payment Trend")
         trend_df = df.groupby("Date")["Total Amount"].sum().reset_index()
         # Use a professional blue-to-purple gradient feel
         st.area_chart(trend_df.set_index("Date"), color="#29b5e8")
@@ -112,7 +112,7 @@ elif page == "Analytics":
         col1, col2 = st.columns(2)
 
         with col1:
-            st.subheader("Vendor Allocation")
+            st.subheader("Vendor Spend Distribution")
             # Donut Chart with professional 'Icefire' colors
             fig_vendor = px.pie(df, values='Total Amount', names='Vendor Name', 
                                hole=0.5, color_discrete_sequence=px.colors.qualitative.Prism)
@@ -120,7 +120,7 @@ elif page == "Analytics":
             st.plotly_chart(fig_vendor, width='stretch')
 
         with col2:
-            st.subheader("Tax Liability by Vendor")
+            st.subheader("GST Contribution by Vendor")
             # Horizontal Bar Chart with a clean professional scale
             gst_df = df.groupby("Vendor Name")["GST"].sum().sort_values().reset_index()
             fig_gst = px.bar(gst_df, x='GST', y='Vendor Name', orientation='h',
@@ -131,7 +131,7 @@ elif page == "Analytics":
         st.divider()
         df["Year"] = df["Date"].dt.year
         yearly_summary = df.groupby("Year")["Total Amount"].sum().reset_index()
-        st.subheader("Comparative Annual Growth")
+        st.subheader("Yearly Expense Trend")
         # Multi-color bars based on the Year
         st.bar_chart(yearly_summary.set_index("Year"), color="#636EFA")
     else:
@@ -139,9 +139,9 @@ elif page == "Analytics":
 
 # ---------------- AI Q&A ----------------
 
-elif page == "AI Q&A":
+elif page == "AI Insights":
 
-    st.header("🤖 Ask about your invoices")
+    st.header(" Ask about your invoices")
 
     question = st.text_input("Enter your question about the invoices")
 
