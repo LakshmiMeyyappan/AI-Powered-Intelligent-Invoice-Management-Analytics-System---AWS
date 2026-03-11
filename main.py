@@ -59,6 +59,44 @@ Base.metadata.create_all(bind=engine)
 class Question(BaseModel):
     question: str
 
+def seed_demo_invoice():
+    db = SessionLocal()
+    try:
+        existing = db.query(Invoice).first()
+        if not existing:
+
+            invoices = [
+                Invoice(
+                    vendor="Zylker Technologies",
+                    invoice_number="INV-1001",
+                    invoice_date=datetime.strptime("2025-01-10", "%Y-%m-%d").date(),
+                    total_amount=12000,
+                    gst=2160
+                ),
+                Invoice(
+                    vendor="Acme Corp",
+                    invoice_number="INV-1002",
+                    invoice_date=datetime.strptime("2025-02-05", "%Y-%m-%d").date(),
+                    total_amount=18500,
+                    gst=3330
+                ),
+                Invoice(
+                    vendor="Demo Vendor Pvt Ltd",
+                    invoice_number="INV-1003",
+                    invoice_date=datetime.strptime("2025-03-01", "%Y-%m-%d").date(),
+                    total_amount=9500,
+                    gst=1710
+                )
+            ]
+
+            db.add_all(invoices)
+            db.commit()
+
+    finally:
+        db.close()
+
+seed_demo_invoice()
+
 # ----------------------------
 # OCR & Extraction Logic
 # ----------------------------
