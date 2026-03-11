@@ -1,4 +1,4 @@
-﻿import os
+import os
 import json
 import re
 import tempfile
@@ -175,16 +175,17 @@ def ask_question(data: Question):
     
   # 1. SQL Generation with Safety Guardrails
     sql_prompt = f"""
-    You are a MySQL expert. Generate a SQL query to answer the user's question.
+    You are a SQLite SQL expert. Generate a SQL query to answer the user's question.
     Table: 'invoices'
     Columns: id, vendor, invoice_number, invoice_date, total_amount, gst
 
     Rules:
-    - Return ONLY the SQL code. No explanation.
-    - Only use SELECT statements. 
-    - For 'highest/top' amount, use: ORDER BY total_amount DESC LIMIT 1
-    - For dates, use MySQL syntax: DATE_FORMAT(invoice_date, '%Y-%m-%d')
-    - If calculating totals, use: SUM(total_amount)
+    - Return ONLY SQL. No explanation.
+    - Only SELECT queries allowed.
+    - For highest values use: ORDER BY total_amount DESC LIMIT 1
+    - For totals use: SUM(total_amount)
+    - For year filtering use: strftime('%Y', invoice_date)
+    - For month filtering use: strftime('%m', invoice_date)
     
     Question: {data.question}
     """
