@@ -76,14 +76,14 @@ def seed_demo_invoice():
                 Invoice(
                     vendor="Acme Corp",
                     invoice_number="INV-1002",
-                    invoice_date=datetime.strptime("2025-02-05", "%Y-%m-%d").date(),
+                    invoice_date=datetime.strptime("2024-02-05", "%Y-%m-%d").date(),
                     total_amount=18500,
                     gst=3330
                 ),
                 Invoice(
                     vendor="Demo Vendor Pvt Ltd",
                     invoice_number="INV-1003",
-                    invoice_date=datetime.strptime("2025-03-01", "%Y-%m-%d").date(),
+                    invoice_date=datetime.strptime("2023-03-01", "%Y-%m-%d").date(),
                     total_amount=9500,
                     gst=1710
                 )
