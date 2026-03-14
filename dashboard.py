@@ -13,7 +13,7 @@ API = "http://localhost:8000"
 
 st.set_page_config(layout="wide", page_title="Invoice Intel", page_icon="🧾")
 
-st.title("InvoiceIQ AI — Smart Invoice Processing & Insights")
+st.title("InvoiceIQ AI — Smart Invoice Processing & Financial Intelligence")
 
 page = st.sidebar.radio(
     "Navigation",
@@ -75,14 +75,14 @@ if page == "Dashboard":
         st.info("No data available. Please upload invoices.")
     else:
         # Metrics Row
-        total_spend = df["Total Amount"].sum()
-        total_gst = df["GST"].sum()
-        avg_inv = df["Total Amount"].mean()
+        total_spend = df["Total Amount (INR)"].sum()
+        total_gst = df["GST (INR)"].sum()
+        avg_inv = df["Total Amount (INR)"].mean()
 
         m1, m2, m3 = st.columns(3)
-        m1.metric("💰 Total Capital Outflow", f"₹{total_spend:,.2f}")
-        m2.metric("🧾 Aggregate GST", f"₹{total_gst:,.2f}")
-        m3.metric("📈 Average Invoice Value", f"₹{avg_inv:,.2f}")
+        m1.metric(" Total Capital Outflow", f"₹{total_spend:,.2f}")
+        m2.metric(" Aggregate GST", f"₹{total_gst:,.2f}")
+        m3.metric(" Average Invoice Value", f"₹{avg_inv:,.2f}")
 
         st.divider()
         st.subheader("Recent Transactions")
@@ -105,7 +105,7 @@ elif page == "Analytics":
         
         # 3. Spend Trend (Area Chart)
         st.subheader("Vendor Payment Trend")
-        trend_df = df.groupby("Date")["Total Amount"].sum().reset_index()
+        trend_df = df.groupby("Date")["Total Amount (INR)"].sum().reset_index()
         # Use a professional blue-to-purple gradient feel
         st.area_chart(trend_df.set_index("Date"), color="#29b5e8")
 
@@ -114,7 +114,7 @@ elif page == "Analytics":
         with col1:
             st.subheader("Vendor Spend Distribution")
             # Donut Chart with professional 'Icefire' colors
-            fig_vendor = px.pie(df, values='Total Amount', names='Vendor Name', 
+            fig_vendor = px.pie(df, values='Total Amount (INR)', names='Vendor Name', 
                                hole=0.5, color_discrete_sequence=px.colors.qualitative.Prism)
             fig_vendor.update_layout(showlegend=True)
             st.plotly_chart(fig_vendor, width='stretch')
@@ -122,15 +122,15 @@ elif page == "Analytics":
         with col2:
             st.subheader("GST Contribution by Vendor")
             # Horizontal Bar Chart with a clean professional scale
-            gst_df = df.groupby("Vendor Name")["GST"].sum().sort_values().reset_index()
-            fig_gst = px.bar(gst_df, x='GST', y='Vendor Name', orientation='h',
-                             color='GST', color_continuous_scale='Turbo')
+            gst_df = df.groupby("Vendor Name")["GST (INR)"].sum().sort_values().reset_index()
+            fig_gst = px.bar(gst_df, x='GST (INR)', y='Vendor Name', orientation='h',
+                             color='GST (INR)', color_continuous_scale='Turbo')
             st.plotly_chart(fig_gst, width='stretch')
 
         # 4. Yearly Comparison
         st.divider()
         df["Year"] = df["Date"].dt.year
-        yearly_summary = df.groupby("Year")["Total Amount"].sum().reset_index()
+        yearly_summary = df.groupby("Year")["Total Amount (INR)"].sum().reset_index()
         st.subheader("Yearly Expense Trend")
         # Multi-color bars based on the Year
         st.bar_chart(yearly_summary.set_index("Year"), color="#636EFA")
