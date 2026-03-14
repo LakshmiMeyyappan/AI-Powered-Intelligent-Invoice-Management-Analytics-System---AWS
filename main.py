@@ -16,6 +16,8 @@ from groq import Groq
 from dotenv import load_dotenv
 from dateutil import parser
 
+import requests
+
 # ----------------------------
 # Basic Setup
 # ----------------------------
@@ -40,6 +42,18 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
+def convert_to_inr(amount, currency):
+
+    if currency == "INR":
+        return amount
+
+    if currency == "USD":
+        rate = requests.get("https://api.exchangerate-api.com/v4/latest/USD").json()
+        usd_to_inr = rate["rates"]["INR"]
+        return amount * usd_to_inr
+
+    return amount
+
 # ----------------------------
 # Database Model
 # ----------------------------
@@ -47,17 +61,24 @@ Base = declarative_base()
 class Invoice(Base):
     __tablename__ = "invoices"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     vendor = Column(String(255), nullable=False)
-    invoice_number = Column(String(255), nullable=False, unique=True)
+    invoice_number = Column(String(255), unique=True)
     invoice_date = Column(Date)
-    total_amount = Column(Float)
-    gst = Column(Float)
+
+    currency = Column(String(10))         # USD / INR
+
+    original_amount = Column(Float)       # Amount in original currency
+    original_gst = Column(Float)          # GST in original currency
+
+    total_amount = Column(Float)          # Converted to INR
+    gst = Column(Float)                   # GST converted to INR
 
 Base.metadata.create_all(bind=engine)
 
 class Question(BaseModel):
     question: str
+
 
 def seed_demo_invoice():
     db = SessionLocal()
@@ -70,22 +91,32 @@ def seed_demo_invoice():
                     vendor="Zylker Technologies",
                     invoice_number="INV-1001",
                     invoice_date=datetime.strptime("2025-01-10", "%Y-%m-%d").date(),
-                    total_amount=12000,
-                    gst=2160
+                    currency = "USD",        # USD / INR
+                    original_amount = 12000,       # Amount in original currency
+                    original_gst = 2160,  
+                    total_amount=1107711,
+                    gst=199385
                 ),
                 Invoice(
                     vendor="Acme Corp",
                     invoice_number="INV-1002",
                     invoice_date=datetime.strptime("2024-02-05", "%Y-%m-%d").date(),
+                    currency = "INR",        # USD / INR
+                    original_amount = 18500,       # Amount in original currency
+                    original_gst = 3330,  
                     total_amount=18500,
                     gst=3330
                 ),
                 Invoice(
                     vendor="Demo Vendor Pvt Ltd",
                     invoice_number="INV-1003",
-                    invoice_date=datetime.strptime("2023-03-01", "%Y-%m-%d").date(),
-                    total_amount=9500,
-                    gst=1710
+                    invoice_date=datetime.strptime("2025-03-01", "%Y-%m-%d").date(),
+                     currency = "USD",        # USD / INR
+
+                    original_amount = 9500,       # Amount in original currency
+                    original_gst = 1710,  
+                    total_amount=876820,
+                    gst=157827
                 )
             ]
 
@@ -96,6 +127,7 @@ def seed_demo_invoice():
         db.close()
 
 seed_demo_invoice()
+
 
 # ----------------------------
 # OCR & Extraction Logic
@@ -128,9 +160,13 @@ def extract_invoice_with_llm(text_input):
       "vendor": "string",
       "invoice_number": "string",
       "invoice_date": "YYYY-MM-DD",
+      "currency": "USD or INR",
       "total_amount": number,
       "gst": number
     }}
+    If currency symbol is $ return USD.
+    If currency symbol is ₹ return INR.
+
     Text: {text_input}
     """
     response = client.chat.completions.create(
@@ -171,15 +207,36 @@ def upload_invoice(file: UploadFile = File(...)):
         if existing:
             return {"message": "Invoice already exists"}
 
+        currency = data.get("currency", "INR")
+
+        currency = data.get("currency", "INR")
+
+        if currency not in ["USD", "INR"]:
+            currency = "INR"
+
+        original_amount = float(data.get("total_amount", 0))
+        original_gst = float(data.get("gst", 0))
+
+        converted_amount = convert_to_inr(original_amount, currency)
+        converted_gst = convert_to_inr(original_gst, currency)
+
         invoice = Invoice(
             vendor=data.get("vendor"),
             invoice_number=invoice_number,
             invoice_date=invoice_date,
-            total_amount=float(data.get("total_amount", 0)),
-            gst=float(data.get("gst", 0)),
+
+            currency=currency,
+
+            original_amount=original_amount,
+            original_gst=original_gst,
+
+            total_amount=converted_amount,
+            gst=converted_gst
         )
+
         db.add(invoice)
         db.commit()
+
         return {"message": "Invoice saved successfully"}
     except Exception as e:
         return {"message": f"Error: {str(e)}"}
@@ -200,8 +257,12 @@ def get_invoices():
             "Invoice ID": inv.invoice_number,
             "Vendor Name": inv.vendor,
             "Date": inv.invoice_date.strftime("%Y-%m-%d") if inv.invoice_date else "N/A",
-            "Total Amount": inv.total_amount,
-            "GST": inv.gst
+            "Currency": inv.currency,
+            "Original Amount": inv.original_amount,
+            "Original GST": inv.original_gst,
+
+            "Total Amount (INR)": round(inv.total_amount,2),
+            "GST (INR)": round(inv.gst,2)
         })
     
     db.close()
@@ -215,7 +276,7 @@ def ask_question(data: Question):
     sql_prompt = f"""
     You are a SQLite SQL expert. Generate a SQL query to answer the user's question.
     Table: 'invoices'
-    Columns: id, vendor, invoice_number, invoice_date, total_amount, gst
+    Columns: id, vendor, invoice_number, invoice_date, currency, original_amount, original_gst, total_amount, gst
 
     Rules:
     - Return ONLY SQL. No explanation.
